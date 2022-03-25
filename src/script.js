@@ -25,7 +25,7 @@ $(document).on('click', '#conectar', function () {
 	`)
 	$.ajax({
 		method: 'GET',
-		url: `http://127.0.0.1:3331/conectar?id=${cliendID}`, 
+		url: `http://165.227.201.7:3331/conectar?id=${cliendID}`, 
 		dataType: 'json',
 		data: {},
 		success: async function(result){
@@ -59,7 +59,7 @@ $('.needs-validation').submit(async function(event){
 	const chat_id = $("#new-number-chat").val()+'@c.us'
 	await $.ajax({
 		method: 'GET',
-		url: `http://127.0.0.1:3331/newchat`, 
+		url: `http://165.227.201.7:3331/newchat`, 
 		dataType: 'json',
 		data: {
 			chat_id: chat_id
@@ -260,7 +260,7 @@ let lastDate = "";
 async function busca(){
 	await $.ajax({
 		method: 'GET',
-		url: "http://127.0.0.1:3331/tcs", 
+		url: "http://165.227.201.7:3331/tcs", 
 		success: function(result){
 			var json = JSON.parse(result)
 			console.log('1')
@@ -277,7 +277,7 @@ let populateChatList = async () => {
 	// contactList.forEach((msg) => {
 		await $.ajax({
 			method: 'POST',
-			url: "http://127.0.0.1:3331/chats", 
+			url: "http://165.227.201.7:3331/chats", 
 			success: async function(result){
 				contactList = result
 				await chatList.push(result);
@@ -384,7 +384,7 @@ let newMessageToMessageArea = async (msg) => {
 
 	await $.ajax({
 		type: 'GET',
-		url: "http://127.0.0.1:3331/teste", 
+		url: "http://165.227.201.7:3331/teste", 
 		dataType: 'json',
 		data: {
 			message: msg.body,
@@ -586,7 +586,7 @@ let generateMessageArea = async (elem, chatIndex) => {
 
 	await $.ajax({
 		method: 'GET',
-		url: `http://127.0.0.1:3331/chat/allmessages?number_chat=${chat.contact.number}`, 
+		url: `http://165.227.201.7:3331/chat/allmessages?number_chat=${chat.contact.number}`, 
 		success: async function(result){
 			console.log()
 			msgs = result
@@ -623,7 +623,7 @@ let seachMoreMessages = async (elem) => {
 	let msgs = MessageUtils.getByContactId(chat.contact.id);
 	await $.ajax({
 		method: 'GET',
-		url: `http://127.0.0.1:3331/chat/moremessages?number_chat=${chat.contact.number}`, 
+		url: `http://165.227.201.7:3331/chat/moremessages?number_chat=${chat.contact.number}`, 
 		success: async function(result){
 			console.log(result)
 			msgs = result
