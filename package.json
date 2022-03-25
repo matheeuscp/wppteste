@@ -1,0 +1,22 @@
+{
+  "name": "chat2",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.3",
+    "mysql2": "^2.3.3",
+    "sequelize": "^6.17.0",
+    "socket.io": "^4.4.1",
+    "venom-bot": "^4.0.9"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15",
+    "sequelize-cli": "^6.4.1",
+    "sucrase": "^3.20.3"
+  }
+}
