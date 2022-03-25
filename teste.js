@@ -9,7 +9,7 @@ var port = 3331;
 // const { Server } = require('socket.io')(server)
 const io = require("socket.io")(server, {
     cors: {
-        origin: "http://localhost",
+        origin: "http://165.227.201.7",
         methods: ["GET", "POST"]
       }
 });
