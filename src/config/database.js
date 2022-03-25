@@ -1,7 +1,7 @@
 function databaseConfig() {
   
     return {
-      host: '165.227.201.7',
+      host: 'localhost',
       database: 'chat',
       username: 'postgres',
       password: 'DHsuueynG452Th265',
