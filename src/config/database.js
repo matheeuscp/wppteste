@@ -4,8 +4,8 @@ function databaseConfig() {
       host: 'localhost',
       database: 'chat',
       username: 'root',
-      password: '',
-      dialect: 'mysql',
+      password: 'DHsuueynG452Th265',
+      dialect: 'postgres',
       define: {
         timestamp: true,
         underscored: true,
