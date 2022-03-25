@@ -18,6 +18,10 @@ const io = require("socket.io")(server, {
 });
 
 let clients = [];      
+app.get('/teste-servidor', function(req,res) {
+    return res.jons({teste: true})
+
+})
 
 io.on("connection", function (socket_client) { 
     const id = socket_client.id
