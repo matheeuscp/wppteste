@@ -105,7 +105,7 @@ $(document).on('click', '#newChat', function () {
 	
 });
 
-var socket = io.connect("http://localhost:3331");
+var socket = io.connect("http://165.227.201.7:3331");
 
 $(document).ready(function(){  
 	if(sessionStorage.getItem("wpp_status") == 'conected'){
