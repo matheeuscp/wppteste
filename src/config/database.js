@@ -4,7 +4,7 @@ function databaseConfig() {
       host: 'localhost',
       database: 'chat',
       username: 'postgres',
-      password: 'DHsuueynG452Th265',
+      password: 'DHsuueynG452Th26576Tytr',
       dialect: 'postgres',
       define: {
         timestamp: true,
