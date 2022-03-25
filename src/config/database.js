@@ -3,7 +3,7 @@ function databaseConfig() {
     return {
       host: 'localhost',
       database: 'chat',
-      username: 'root',
+      username: 'postgres',
       password: 'DHsuueynG452Th265',
       dialect: 'postgres',
       define: {
