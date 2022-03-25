@@ -19,7 +19,7 @@ const io = require("socket.io")(server, {
 
 let clients = [];      
 app.get('/teste-servidor', function(req,res) {
-    return res.jons({teste: true})
+    return res.json({teste: true})
 
 })
 
