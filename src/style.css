@@ -19,6 +19,10 @@
 	height: 100vh;
 }
 
+#main-container2 {
+	height: 70vh;
+}
+
 #navbar {
 	background: #0050d1;
 }
@@ -154,4 +158,8 @@
 
 #carregar-mais:hover{
     cursor: pointer;
+}
+
+.h-80 {
+	height: 80% !important;
 }

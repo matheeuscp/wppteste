@@ -6,6 +6,7 @@ class Conversation extends Model {
             {
                 chat_id: Sequelize.INTEGER,
                 user_id: Sequelize.INTEGER,
+                ssid: Sequelize.STRING,
             }, 
             {
                 sequelize,

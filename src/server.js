@@ -12,12 +12,14 @@ const { Server } = require('socket.io')
 
 const io = require("socket.io")(server, {
     cors: {
+        // origin: "http://localhost",
         origin: "http://165.227.201.7",
         methods: ["GET", "POST"],
       }
 });
 
-let clients = [];      
+let clients = [];
+
 app.get('/teste-servidor', function(req,res) {
     return res.json({teste: true})
 
@@ -25,19 +27,29 @@ app.get('/teste-servidor', function(req,res) {
 
 io.on("connection", function (socket_client) { 
     const id = socket_client.id
-        clients['5521979394604@c.us'] = id 
-
+    console.log("##############")
+    console.log(socket_client.handshake.query.user);
+    console.log("##############")
+    clients[socket_client.handshake.query.user] = id 
     app.get('/conectar', function(req,res) {
-        const client_id = clients['5521979394604@c.us']
+        const token = req.query.token
+        // const client_id = clients['5521979394604@c.us']
+        const client_id = clients[socket_client.handshake.query.user]
 
         // socket_client.to(client_id).emit("teste")
 
         venom.create({
-            session: "testeBot", //name of session
+            session: token, //name of session
             multidevice: true, 
             logQR: false,
+            statusFind: (statusSession, session) => {
+                console.log('=============' + statusSession + '===================');
+                console.log('Session name: ', session);
+            },
             catchQR: (base64Qrimg, asciiQR, attempts, urlCode) => {
     
+                console.log(base64Qrimg)
+                console.log(asciiQR)
                 console.log('====DISCONECTED ======')
                 socket_client.to(client_id).emit("wpp_disconnected")
     
@@ -64,13 +76,16 @@ io.on("connection", function (socket_client) {
                     }
                 );
                 console.log('============mudou========')
-                socket_client.to(client_id).emit('ready', './images/out.png')
+                
+                socket_client.to(client_id).emit('ready', base64Qrimg)
+                // socket_client.to(client_id).emit('ready', './images/out.png')
             },
+            
         })
         .then((client) => {
             console.log("wpp_disconnected")
 
-            start(client, client_id)
+            start(client, client_id, token)
         })
         .catch((erro) => {
             console.log(erro);
@@ -78,198 +93,221 @@ io.on("connection", function (socket_client) {
     })
     // })
 
-    async function start(client, client_id) {
+    async function start(client, client_id, token) {
         // socket_client.emit('wpp_connected')
+        let url = ''
 
         socket_client.to(client_id).emit("wpp_connected")
         console.log('====CONECTED ======')
         console.log(client_id)
 
         // io.on("connection", function (socket_client) {  
+            
             client.onMessage(async (message) => {
-                const client_id = clients['5521981642364@c.us']
-                socket_client.to(client_id).emit("update", 'message')
-
-                const mensagem = message.body
-                const from = message.from
-                const contact_name = message.sender.pushname
-     
-                if (message.from === "5521981642364@c.us") {
-                    const conversation = await Conversation.findOne({
-                        where: {
-                            user_id: 1,
-                            chat_id: "5521981642364@c.us"
-                        }
-                    })
-                    
-                    if(conversation)
-                    {
-                        const stage = await ConversationStage.findOne({
-                            where: {
-                                conversation_id: conversation.id,
-                                end_at: null
-                            }
-                        })
-                        console.log('=====================')
-                        console.log(stage)
-                        // return false
-                        if(!stage){
-                            let dialog = await BotDialog.findOne({
-                                where: { action: 'start' }
-                            })
-                            console.log(contact_name)
-                            let options = `${dialog.message_bot}`
-                            let resp = ''
-                            if(dialog.response_options){
-                                resp = JSON.parse(dialog.response_options)
-                                resp.options.map(e => {
-                                    options += `\n\n${e.call_dialog}- ${e.value} \n`
-                                })  
-                            } 
-
-                            client.sendText(from, options)
-                            .then(async (result) => {
-                                if(!result.error){
-                                    await ConversationStage.create({
-                                        conversation_id: conversation.id,
-                                        dialog_id: dialog.id,
-                                        start_at: new Date()
-                                    })
-                                }
-                                console.log("Result: ", result); //return object success
-                            })
-                            .catch((erro) => {
-                                console.error("Error when sending: ", erro); //return object error
-                            });
-                            console.log(options)
-                            return false
-                        }
-
-                        let dialog = await BotDialog.findOne({
-                            where: { id: stage.dialog_id }
-                        })
-
-                        let sequence = dialog.sequence
-
-                        if(dialog.response_options){
-
-                            if( dialog.sequence === 0){
-                            let resp = ''
-                                    resp = JSON.parse(dialog.response_options)
-
-                                for(var i=0; i < resp.options.length; i++){
-                                    if(String(resp.options[i].call_dialog) === String(mensagem)){
-                                        sequence = mensagem
-                                    }
-                                }
-                            }
-                        } 
-
-                        let nextMessage = await BotDialog.findOne({
-                            where: { id: sequence }
-                        })
-                        // console.log(sequence)
-                        // console.log(nextMessage)
-                        // return false
-                        let options = `${nextMessage.message_bot.replace('{{nome}}', mensagem)}`
-                        let resp = ''
-                        if(nextMessage.response_options){
-                            resp = JSON.parse(nextMessage.response_options)
-                            options += `\n\n`
-                            
-                            resp.options.map(e => {
-                                options += `${e.call_dialog}- ${e.value} \n`
-                            })  
-                        } 
-
-                        client.sendText(from, options)
-                            .then(async (result) => {
-                                if(!result.error){
-                                    await stage.update({
-                                        dialog_id: nextMessage.id,
-                                    })
-                                }
-                                console.log("Result: ", result); //return object success
-                            })
-                            .catch((erro) => {
-                                console.error("Error when sending: ", erro); //return object error
-                            });
-                        return false
+                // const client_id = clients['5521979394604@c.us']
+                // socket_client.to(client_id).emit("update", 'message')
+                const conversation = await Conversation.findOne({
+                    where: {
+                        chat_id: message.from
                     }
-                    // let dialog = await BotDialog.findOne({
-                    //     where: { sequence: mensagem }
-                    // })
-                     
-                    // if(!dialog){
-                    //     dialog = await BotDialog.findOne({
-                    //         where: { sequence: 1 }
-                    //     })
-                    // }
+                })
+
+                if(conversation){
+                    const socketId =  clients[conversation.ssid]
+                
+
+                // return false
+                    const mensagem = message.body
+                    const from = message.from
+                    const contact_name = message.sender.pushname
      
-                    // let options = `${dialog.message_bot.replace('{nome}', contact_name)}\n\n`
-                    // let resp = ''
-                    // if(dialog.response_options){
-                    //     resp = JSON.parse(dialog.response_options)
-                    //     resp.options.map(e => {
-                    //         options += `${e.call_dialog}- ${e.value} \n`
-                    //     })  
-                    // } 
+                // if (message.from === "5521981642364@c.us") {
+                //     const conversation = await Conversation.findOne({
+                //         where: {
+                //             user_id: 1,
+                //             chat_id: "5521981642364@c.us"
+                //         }
+                //     })
+                    
+                //     if(conversation)
+                //     {
+                //         const stage = await ConversationStage.findOne({
+                //             where: {
+                //                 conversation_id: conversation.id,
+                //                 end_at: null
+                //             }
+                //         })
+                //         console.log('=====================')
+                //         console.log(stage)
+                //         // return false
+                //         if(!stage){
+                //             let dialog = await BotDialog.findOne({
+                //                 where: { action: 'start' }
+                //             })
+                //             console.log(contact_name)
+                //             let options = `${dialog.message_bot}`
+                //             let resp = ''
+                //             if(dialog.response_options){
+                //                 resp = JSON.parse(dialog.response_options)
+                //                 resp.options.map(e => {
+                //                     options += `\n\n${e.call_dialog}- ${e.value} \n`
+                //                 })  
+                //             } 
+
+                //             client.sendText(from, options)
+                //             .then(async (result) => {
+                //                 if(!result.error){
+                //                     await ConversationStage.create({
+                //                         conversation_id: conversation.id,
+                //                         dialog_id: dialog.id,
+                //                         start_at: new Date()
+                //                     })
+                //                 }
+                //                 console.log("Result: ", result); //return object success
+                //             })
+                //             .catch((erro) => {
+                //                 console.error("Error when sending: ", erro); //return object error
+                //             });
+                //             console.log(options)
+                //             return false
+                //         }
+
+                //         let dialog = await BotDialog.findOne({
+                //             where: { id: stage.dialog_id }
+                //         })
+
+                //         let sequence = dialog.sequence
+
+                //         if(dialog.response_options){
+
+                //             if( dialog.sequence === 0){
+                //             let resp = ''
+                //                     resp = JSON.parse(dialog.response_options)
+
+                //                 for(var i=0; i < resp.options.length; i++){
+                //                     if(String(resp.options[i].call_dialog) === String(mensagem)){
+                //                         sequence = mensagem
+                //                     }
+                //                 }
+                //             }
+                //         } 
+
+                //         let nextMessage = await BotDialog.findOne({
+                //             where: { id: sequence }
+                //         })
+                //         // console.log(sequence)
+                //         // console.log(nextMessage)
+                //         // return false
+                //         let options = `${nextMessage.message_bot.replace('{{nome}}', mensagem)}`
+                //         let resp = ''
+                //         if(nextMessage.response_options){
+                //             resp = JSON.parse(nextMessage.response_options)
+                //             options += `\n\n`
+                            
+                //             resp.options.map(e => {
+                //                 options += `${e.call_dialog}- ${e.value} \n`
+                //             })  
+                //         } 
+
+                //         client.sendText(from, options)
+                //             .then(async (result) => {
+                //                 if(!result.error){
+                //                     await stage.update({
+                //                         dialog_id: nextMessage.id,
+                //                     })
+                //                 }
+                //                 console.log("Result: ", result); //return object success
+                //             })
+                //             .catch((erro) => {
+                //                 console.error("Error when sending: ", erro); //return object error
+                //             });
+                //         return false
+                //     }
+                //     // let dialog = await BotDialog.findOne({
+                //     //     where: { sequence: mensagem }
+                //     // })
+                     
+                //     // if(!dialog){
+                //     //     dialog = await BotDialog.findOne({
+                //     //         where: { sequence: 1 }
+                //     //     })
+                //     // }
+     
+                //     // let options = `${dialog.message_bot.replace('{nome}', contact_name)}\n\n`
+                //     // let resp = ''
+                //     // if(dialog.response_options){
+                //     //     resp = JSON.parse(dialog.response_options)
+                //     //     resp.options.map(e => {
+                //     //         options += `${e.call_dialog}- ${e.value} \n`
+                //     //     })  
+                //     // } 
                      
                     
     
-                }
+                // }
      
-                const a = message;
+                    const a = message;
 
-                try {
-                    let contact2 = {}
-                    let chat = {}
-                    let url = ''
-                     
                     try {
-                        const image = await client.getProfilePicFromServer(String(a.from));
-                        url = image? image : 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460__340.png'
+                        let contact2 = {}
+                        let chat = {}
+                        let url = ''
+                        
+                        try {
+                            const image = await client.getProfilePicFromServer(String(a.from));
+                            url = image? image : 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460__340.png'
+                        } catch (error) {
+                            url = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460__340.png'
+                        }
+                        const message = {
+                            sender: a.from,
+                            body: a.content,
+                            time: new Date(a.t),
+                            timestamp: a.t,
+                            status: 1,
+                            recvId: a.to,
+                            recvIsGroup: false,
+                            id:  a.to,
+                            isImage: false,
+                            imageUrl: ''
+                        }
+                        // console.log(message)
+                        // return false
+                        if (a.type == venom.MessageType.IMAGE) {
+                            const buffer = await client.decryptFile(a);
+                            await fs.writeFile('teste.jpg', buffer, (err) => {
+                                
+                            });
+                            var imageAsBase64 = await fs.readFileSync('./teste.jpg', 'base64');
+                                message.imageUrl = imageAsBase64
+                                message.isImage = true
+                        }
+                        console.log('===============')
+                        console.log(socketId)
+                        console.log(clients)
+                        console.log('===============')
+                        socket_client.to(socketId).emit("update", message)
+                        
+                        // io.to(client_id).emit("update", message);
+                        // socket_client.emit("update", message);
+        
                     } catch (error) {
-                        url = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460__340.png'
+                        console.log(error)
                     }
-                    const message = {
-                        sender: a.from,
-                        body: a.content,
-                        time: new Date(a.t),
-                        timestamp: a.t,
-                        status: 1,
-                        recvId: a.to,
-                        recvIsGroup: false,
-                        id:  a.to,
-                        isImage: false,
-                        imageUrl: ''
-                    }
-     
-                    if (a.type == venom.MessageType.IMAGE) {
-                        const buffer = await client.decryptFile(a);
-                        await fs.writeFile('teste.jpg', buffer, (err) => {
-                            
-                        });
-                        var imageAsBase64 = await fs.readFileSync('./teste.jpg', 'base64');
-                            message.imageUrl = imageAsBase64
-                            message.isImage = true
-                    }
-                     
-                    io.to(client_id).emit("update", message);
-                     // socket_client.emit("update", message);
-     
-                } catch (error) {
-                    console.log(error)
                 }
             });
             
-           
-            app.get('/', async (req, res) => {
-                return res.json({hello: 'wo asda 11 rld adsasdad'})
+            url = '/'+token+'/checkStatus'
+            console.log("URL 1::::::"+ url)
+            app.get(url, async (req, res) => {
+                return res.json({status: 'OK'})
             })
-    
-            app.get("/receive", async(req,res)=>{
-                const client_id = clients['5521979394604@c.us']
+            
+            url = '/'+token+'/receive'
+            console.log("URL 2::::::"+ url)
+
+            app.get(url,  async(req,res)=>{
+                // const client_id = clients['5521979394604@c.us']
                 const message = {
                     sender: '5521972527882@c.us',
                     body: 'Hi',
@@ -288,8 +326,11 @@ io.on("connection", function (socket_client) {
                     console.log(error)                      
                   }
             });
+
+            url = '/'+token+'/send'
+            console.log("URL 3::::::"+ url)
             
-            app.post("/send", async(req,res)=>{    
+            app.post(url, async(req,res)=>{    
                 const number = req.body.number;
                 const message = req.body.message;
         
@@ -307,8 +348,9 @@ io.on("connection", function (socket_client) {
                     });
                 });
             });
-            
-            app.get("/chat/allmessages", async(req,res)=> {
+            url = '/'+token+'/chat/allmessages'
+            console.log("URL 4::::::"+ url)
+            app.get(url, async(req,res)=> {
                 const number = req.query.number_chat
                 const conversation = await client.getAllMessagesInChat(String(number));
                 
@@ -345,8 +387,9 @@ io.on("connection", function (socket_client) {
                 
                 return res.json(allmessages)
             }); 
-    
-            app.get("/chat/moremessages", async(req,res)=>{
+            url = '/'+token+'/chat/moremessages'
+            console.log("URL 5::::::"+ url)
+            app.get(url, async(req,res)=>{
                 const number = req.query.number_chat        
                 const conversation = await client.loadEarlierMessages(number);
         
@@ -371,16 +414,27 @@ io.on("connection", function (socket_client) {
                 
                 return res.json(allmessages)
             }); 
-    
-            app.get("/newchat", async (req,res)=>{
+            url = '/'+token+'/newchat'
+            console.log("URL 6::::::"+ url)
+            app.get(url, async (req,res)=>{
                 const user = await client.getNumberProfile(req.query.chat_id);
                 let chat = {}
                 let url = ''
                 
-                const conversation = await Conversation.create({
-                    user_id: 1,
-                    chat_id: req.query.chat_id
+                let conversation = await Conversation.findOne({
+                    where: {
+                        ssid: req.query.ssid,
+                        chat_id: req.query.chat_id
+                    }
                 })
+                
+                if(!conversation)
+                {
+                    conversation = await Conversation.create({
+                        ssid: req.query.ssid,
+                        chat_id: req.query.chat_id
+                    })
+                }
 
                 if(conversation){
 
@@ -409,11 +463,13 @@ io.on("connection", function (socket_client) {
                     return res.status(200).json(chat)
                 }
 
+                
                 return res.status(400).json({erro: 'Ocorreu um erro ao inserir conversa.'})
 
             })
-
-            app.post("/chats", async(req,res)=>{
+            url = '/'+token+'/chats'
+            console.log("URL 7::::::"+ url)
+            app.post(url, async(req,res)=>{
                 const conversation = await Conversation.findAll({
                     where: {user_id : 1}
                 })
@@ -488,22 +544,46 @@ io.on("connection", function (socket_client) {
                 
                 return res.json(allchats)
             }); 
-    
-            app.get("/teste", async(req,res)=>{
+            url = '/'+token+'/teste'
+            console.log("URL 8::::::"+ url)
+            app.get(url, async(req,res)=>{
                 const mensagem = `*Matheus - WEBDEC*\n\n ${req.query.message}`
-                client.sendText(req.query.number_chat, mensagem).then(response =>{
-                    res.status(200).json({
-                        status: true,
-                        message: 'Mensagem enviada',
-                        response: response
-                    });
-                }).catch(err =>{
-                    res.status(500).json({
-                        status: false,
-                        message: 'Mensagem não enviada',
-                        response: err.text
-                    });
-                });
+                
+                // const conversationExist = await Conversation.findOne({
+                //     where: {
+                //         ssid: req.query.ssid,
+                //         chat_id: req.query.number_chat
+                //     }
+                // })
+                
+                // if(!conversationExist){
+                    // const conversation = await Conversation.create({
+                    //     ssid: req.query.ssid,
+                    //     chat_id: req.query.chat_id
+                    // })
+
+                    // if(conversation){
+                        client.sendText(req.query.number_chat, mensagem).then(response =>{
+                            return res.status(200).json({
+                                status: true,
+                                message: 'Mensagem enviada',
+                                response: response
+                            });
+                        }).catch(err =>{
+                            return res.status(500).json({
+                                status: false,
+                                message: 'Mensagem não enviada',
+                                response: err.text
+                            });
+                        });
+                    // }
+                // }
+
+                // return res.status(500).json({
+                //     status: false,
+                //     message: 'Mensagem não enviada',
+                //     response: 'Ocorreu um erro ao enviar a mensagem.'
+                // });
             });
             
             
