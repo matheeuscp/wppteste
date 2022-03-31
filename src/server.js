@@ -12,8 +12,8 @@ const { Server } = require('socket.io')
 
 const io = require("socket.io")(server, {
     cors: {
-        // origin: "http://localhost",
-        origin: "http://165.227.201.7",
+        origin: "http://localhost",
+        // origin: "http://165.227.201.7",
         methods: ["GET", "POST"],
       }
 });
@@ -27,9 +27,9 @@ app.get('/teste-servidor', function(req,res) {
 
 io.on("connection", function (socket_client) { 
     const id = socket_client.id
-    console.log("##############")
-    console.log(socket_client.handshake.query.user);
-    console.log("##############")
+    // console.log("##############")
+    // console.log(socket_client.handshake.query.user);
+    // console.log("##############")
     clients[socket_client.handshake.query.user] = id 
     app.get('/conectar', function(req,res) {
         const token = req.query.token
@@ -96,10 +96,12 @@ io.on("connection", function (socket_client) {
     async function start(client, client_id, token) {
         // socket_client.emit('wpp_connected')
         let url = ''
-
+        console.log("=========================================")
+        console.log(client_id)
+        console.log("=========================================")
         socket_client.to(client_id).emit("wpp_connected")
         console.log('====CONECTED ======')
-        console.log(client_id)
+        // console.log(client_id)
 
         // io.on("connection", function (socket_client) {  
             
@@ -266,6 +268,7 @@ io.on("connection", function (socket_client) {
                             timestamp: a.t,
                             status: 1,
                             recvId: a.to,
+                            receivid: a.fromMe,
                             recvIsGroup: false,
                             id:  a.to,
                             isImage: false,
@@ -282,10 +285,10 @@ io.on("connection", function (socket_client) {
                                 message.imageUrl = imageAsBase64
                                 message.isImage = true
                         }
-                        console.log('===============')
-                        console.log(socketId)
-                        console.log(clients)
-                        console.log('===============')
+                        // console.log('===============')
+                        // console.log(socketId)
+                        // console.log(clients)
+                        // console.log('===============')
                         socket_client.to(socketId).emit("update", message)
                         
                         // io.to(client_id).emit("update", message);
@@ -298,13 +301,13 @@ io.on("connection", function (socket_client) {
             });
             
             url = '/'+token+'/checkStatus'
-            console.log("URL 1::::::"+ url)
+            // console.log("URL 1::::::"+ url)
             app.get(url, async (req, res) => {
                 return res.json({status: 'OK'})
             })
             
             url = '/'+token+'/receive'
-            console.log("URL 2::::::"+ url)
+            // console.log("URL 2::::::"+ url)
 
             app.get(url,  async(req,res)=>{
                 // const client_id = clients['5521979394604@c.us']
@@ -328,7 +331,7 @@ io.on("connection", function (socket_client) {
             });
 
             url = '/'+token+'/send'
-            console.log("URL 3::::::"+ url)
+            // console.log("URL 3::::::"+ url)
             
             app.post(url, async(req,res)=>{    
                 const number = req.body.number;
@@ -349,7 +352,6 @@ io.on("connection", function (socket_client) {
                 });
             });
             url = '/'+token+'/chat/allmessages'
-            console.log("URL 4::::::"+ url)
             app.get(url, async(req,res)=> {
                 const number = req.query.number_chat
                 const conversation = await client.getAllMessagesInChat(String(number));
@@ -359,6 +361,9 @@ io.on("connection", function (socket_client) {
                 for(var i=0; i < conversation.length; i++){
                     let chat = {}
                     const conv = conversation[i]
+                    // console.log("::::::::::::::::::::::::::::")
+                    // console.log(conv)
+                    // console.log("::::::::::::::::::::::::::::")
                     const message = {
                         sender: conv.from,
                         body: conv.content,
@@ -366,6 +371,7 @@ io.on("connection", function (socket_client) {
                         timestamp: conv.timestamp,
                         status: 1,
                         recvId: conv.to,
+                        receivid: conv.fromMe,
                         recvIsGroup: false,
                         id: conv.rowId,
                         isImage: false,
@@ -388,7 +394,7 @@ io.on("connection", function (socket_client) {
                 return res.json(allmessages)
             }); 
             url = '/'+token+'/chat/moremessages'
-            console.log("URL 5::::::"+ url)
+            // console.log("URL 5::::::"+ url)
             app.get(url, async(req,res)=>{
                 const number = req.query.number_chat        
                 const conversation = await client.loadEarlierMessages(number);
@@ -415,7 +421,7 @@ io.on("connection", function (socket_client) {
                 return res.json(allmessages)
             }); 
             url = '/'+token+'/newchat'
-            console.log("URL 6::::::"+ url)
+            // console.log("URL 6::::::"+ url)
             app.get(url, async (req,res)=>{
                 const user = await client.getNumberProfile(req.query.chat_id);
                 let chat = {}
@@ -468,7 +474,7 @@ io.on("connection", function (socket_client) {
 
             })
             url = '/'+token+'/chats'
-            console.log("URL 7::::::"+ url)
+            // console.log("URL 7::::::"+ url)
             app.post(url, async(req,res)=>{
                 const conversation = await Conversation.findAll({
                     where: {user_id : 1}
@@ -545,7 +551,7 @@ io.on("connection", function (socket_client) {
                 return res.json(allchats)
             }); 
             url = '/'+token+'/teste'
-            console.log("URL 8::::::"+ url)
+            // console.log("URL 8::::::"+ url)
             app.get(url, async(req,res)=>{
                 const mensagem = `*Matheus - WEBDEC*\n\n ${req.query.message}`
                 
