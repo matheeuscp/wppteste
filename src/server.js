@@ -12,8 +12,8 @@ const { Server } = require('socket.io')
 
 const io = require("socket.io")(server, {
     cors: {
-        origin: "http://localhost",
-        // origin: "http://165.227.201.7",
+        // origin: "http://localhost",
+        origin: "http://165.227.201.7",
         methods: ["GET", "POST"],
       }
 });
