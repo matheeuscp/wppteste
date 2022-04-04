@@ -13,7 +13,7 @@ const { Server } = require('socket.io')
 const io = require("socket.io")(server, {
     cors: {
         // origin: "http://localhost",
-        origin: "http://165.227.201.7",
+        origin: "*",
         methods: ["GET", "POST"],
       }
 });
@@ -27,9 +27,9 @@ app.get('/teste-servidor', function(req,res) {
 
 io.on("connection", function (socket_client) { 
     const id = socket_client.id
-    // console.log("##############")
-    // console.log(socket_client.handshake.query.user);
-    // console.log("##############")
+    console.log("##############")
+    console.log(socket_client.handshake.query.user);
+    console.log("##############")
     clients[socket_client.handshake.query.user] = id 
     app.get('/conectar', function(req,res) {
         const token = req.query.token
@@ -276,15 +276,16 @@ io.on("connection", function (socket_client) {
                         }
                         // console.log(message)
                         // return false
-                        if (a.type == venom.MessageType.IMAGE) {
-                            const buffer = await client.decryptFile(a);
-                            await fs.writeFile('teste.jpg', buffer, (err) => {
+                        //------------- IMAGEM
+                        // if (a.type == venom.MessageType.IMAGE) {
+                        //     const buffer = await client.decryptFile(a);
+                        //     await fs.writeFile('teste.jpg', buffer, (err) => {
                                 
-                            });
-                            var imageAsBase64 = await fs.readFileSync('./teste.jpg', 'base64');
-                                message.imageUrl = imageAsBase64
-                                message.isImage = true
-                        }
+                        //     });
+                        //     var imageAsBase64 = await fs.readFileSync('./teste.jpg', 'base64');
+                        //         message.imageUrl = imageAsBase64
+                        //         message.isImage = true
+                        // }
                         // console.log('===============')
                         // console.log(socketId)
                         // console.log(clients)
@@ -409,6 +410,7 @@ io.on("connection", function (socket_client) {
                         body: conv.content,
                         time: new Date(conv.timestamp),
                         timestamp: conv.timestamp,
+                        receivid: conv.fromMe,
                         status: 1,
                         recvId: conv.to,
                         recvIsGroup: false,
@@ -429,7 +431,7 @@ io.on("connection", function (socket_client) {
                 
                 let conversation = await Conversation.findOne({
                     where: {
-                        ssid: req.query.ssid,
+                        // ssid: req.query.ssid,
                         chat_id: req.query.chat_id
                     }
                 })
@@ -465,7 +467,9 @@ io.on("connection", function (socket_client) {
                     chat.name = user.displayName ? user.displayName : user.pushname;
                     chat.msg = {};
                     chat.lastMessage = lastMessage
-        
+                    await conversation.update({
+                        ssid: req.query.ssid,
+                    })
                     return res.status(200).json(chat)
                 }
 
@@ -553,7 +557,7 @@ io.on("connection", function (socket_client) {
             url = '/'+token+'/teste'
             // console.log("URL 8::::::"+ url)
             app.get(url, async(req,res)=>{
-                const mensagem = `*Matheus - WEBDEC*\n\n ${req.query.message}`
+                const mensagem = `${req.query.message}`
                 
                 // const conversationExist = await Conversation.findOne({
                 //     where: {
