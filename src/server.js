@@ -62,9 +62,12 @@ io.on("connection", function (socket_client) {
             },
             catchQR: (base64Qrimg, asciiQR, attempts, urlCode) => {
     
-                console.log(base64Qrimg)
+                // console.log(base64Qrimg)
                 console.log(asciiQR)
                 console.log('====DISCONECTED ======')
+                console.log(client_id)
+                console.log('====DISCONECTED ======')
+
                 socket_client.to(client_id).emit("wpp_disconnected")
     
                 var matches = base64Qrimg.match(/^data:([A-Za-z-+\\/]+);base64,(.+)$/),
