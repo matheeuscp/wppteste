@@ -4,8 +4,8 @@ import BotDialog from './app/models/BotDialog'
 import Conversation from './app/models/Conversation'
 import ConversationStage from './app/models/ConversationStage'
 const app = require('./app');
-const http = require('http');
-const server = http.createServer(app);
+const https = require('https');
+const server = https.createServer(app);
 const venom = require('venom-bot');
 const port = 3331;
 const { Server } = require('socket.io')
