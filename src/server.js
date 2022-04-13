@@ -8,7 +8,7 @@ import ConversationStage from './app/models/ConversationStage'
 //     cert: '/etc/ssl/certs/STAR_webdec_com_br.crt'
 // };
 const privateKey = fs.readFileSync(`/etc/ssl/certs/server.key`);
-const certificate = fs.readFileSync(`test/fixtures/keys/agent2-cert.pem`);
+const certificate = fs.readFileSync(`/etc/ssl/certs/STAR_webdec_com_br.crt`);
 
   
 const app = require('./app');
