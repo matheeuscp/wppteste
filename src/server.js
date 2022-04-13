@@ -3,9 +3,13 @@ import Messages from './app/models/Messages';
 import BotDialog from './app/models/BotDialog'
 import Conversation from './app/models/Conversation'
 import ConversationStage from './app/models/ConversationStage'
+const credentials = {
+    key: '/etc/ssl/certs/server.key', 
+    cert: '/etc/ssl/certs/STAR_webdec_com_br.crt'
+};
 const app = require('./app');
 const https = require('https');
-const server = https.createServer(app);
+const server = https.createServer(credentials, app);
 const venom = require('venom-bot');
 const port = 3331;
 const { Server } = require('socket.io')
