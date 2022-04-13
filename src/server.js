@@ -53,8 +53,8 @@ io.on("connection", function (socket_client) {
             session: token, //name of session
             multidevice: true, 
             logQR: false,
-            headless: true,
-            useChrome: false,
+            // headless: true,
+            // useChrome: false,
             // chromiumVersion: '970485',
             statusFind: (statusSession, session) => {
                 console.log('=============' + statusSession + '===================');
