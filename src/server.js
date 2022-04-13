@@ -7,16 +7,16 @@ import ConversationStage from './app/models/ConversationStage'
 //     key: '/etc/ssl/certs/server.key', 
 //     cert: '/etc/ssl/certs/STAR_webdec_com_br.crt'
 // };
-const credentials = {
-    key: fs.readFileSync(`/etc/ssl/certs/server.key`),
-    cert: fs.readFileSync(`/etc/ssl/certs/STAR_webdec_com_br.crt`)
-};
+const privateKey = fs.readFileSync(`/etc/ssl/certs/server.key`);
+const certificate = fs.readFileSync(`test/fixtures/keys/agent2-cert.pem`);
 
   
-// const app = require('./app');
+const app = require('./app');
 const https = require('https');
-const app = require('express')();
-const server = https.createServer(credentials, app);
+const server = https.createServer({
+    key: privateKey,
+    cert: certificate
+}, app);
 const venom = require('venom-bot');
 const port = 3331;
 const { Server } = require('socket.io')
