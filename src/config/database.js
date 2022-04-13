@@ -4,8 +4,8 @@ function databaseConfig() {
       host: 'localhost',
       database: 'chat',
       username: 'root',
-      password: '',
-      // password: 'DHsuueynG452Th26576Tytr',
+      // password: '',
+      password: 'YTwgsgagkHHSAHGASASAHGSAFFAR254144426*$31!6211',
       dialect: 'mysql',
       define: {
         timestamp: true,
