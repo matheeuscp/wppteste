@@ -42,6 +42,9 @@ io.on("connection", function (socket_client) {
             session: token, //name of session
             multidevice: true, 
             logQR: false,
+            headless: true,
+            useChrome: false,
+            chromiumVersion: '970485',
             statusFind: (statusSession, session) => {
                 console.log('=============' + statusSession + '===================');
                 console.log('Session name: ', session);
@@ -106,6 +109,7 @@ io.on("connection", function (socket_client) {
         // io.on("connection", function (socket_client) {  
             
             client.onMessage(async (message) => {
+                if (message.type != venom.MessageType.STICKER) {
                 // const client_id = clients['5521979394604@c.us']
                 // socket_client.to(client_id).emit("update", 'message')
                 const conversation = await Conversation.findOne({
@@ -113,8 +117,12 @@ io.on("connection", function (socket_client) {
                         chat_id: message.from
                     }
                 })
-
+                
                 if(conversation){
+                    console.log('#############################')
+                    console.log(message)
+                    console.log('#############################')
+
                     const socketId =  clients[conversation.ssid]
                 
 
@@ -266,6 +274,8 @@ io.on("connection", function (socket_client) {
                             body: a.content,
                             time: new Date(a.t),
                             timestamp: a.t,
+                            audioBase64: '',
+                            isAudio: false,
                             status: 1,
                             recvId: a.to,
                             receivid: a.fromMe,
@@ -274,9 +284,40 @@ io.on("connection", function (socket_client) {
                             isImage: false,
                             imageUrl: ''
                         }
+                        
+                        
+                        await new Promise(async (resolve, reject) => {  
+            
+                            if (a.type == venom.MessageType.VOICE) {
+                                const buffer = await  client.decryptFile(a);
+                                const audio64 =  buffer.toString('base64');
+        
+                                message.audioBase64 = audio64
+                                message.isAudio = true
+                                message.body = ''
+                                
+                            }
+                            
+                            resolve()
+                    }); 
                         // console.log(message)
                         // return false
                         //------------- IMAGEM
+                        await new Promise(async (resolve, reject) => {  
+            
+                            if (a.type == venom.MessageType.IMAGE) {
+                                const buffer = await  client.decryptFile(a);
+                                const imagem64 =  buffer.toString('base64');
+        
+                                message.imageUrl = imagem64
+                                message.isImage = true
+                                // message.body = ''
+                                
+                            }
+                            
+                            resolve()
+                        }); 
+
                         // if (a.type == venom.MessageType.IMAGE) {
                         //     const buffer = await client.decryptFile(a);
                         //     await fs.writeFile('teste.jpg', buffer, (err) => {
@@ -299,6 +340,7 @@ io.on("connection", function (socket_client) {
                         console.log(error)
                     }
                 }
+            }
             });
             
             url = '/'+token+'/checkStatus'
@@ -357,11 +399,14 @@ io.on("connection", function (socket_client) {
                 const number = req.query.number_chat
                 const conversation = await client.getAllMessagesInChat(String(number));
                 
+
                 let allmessages = []
                 
+                await new Promise(async (resolve, reject) => { 
                 for(var i=0; i < conversation.length; i++){
                     let chat = {}
                     const conv = conversation[i]
+                   
                     // console.log("::::::::::::::::::::::::::::")
                     // console.log(conv)
                     // console.log("::::::::::::::::::::::::::::")
@@ -380,18 +425,47 @@ io.on("connection", function (socket_client) {
                     }
                         
                     if (conv.type == venom.MessageType.IMAGE) {
-                        const buffer = await client.decryptFile(conv);
-                        await fs.writeFile('teste.jpg', buffer, (err) => {
+                        const buffer = await  client.decryptFile(conv);
+                        const imagem64 =  buffer.toString('base64');
+
+                        message.imageUrl = imagem64
+                        message.isImage = true
+                        // message.body = ''
+                        
+                    }
+
+                    if (conv.type == venom.MessageType.VOICE) {
+                        const buffer = await  client.decryptFile(conv);
+                        const audio64 =  buffer.toString('base64');
+
+                        message.audioBase64 = audio64
+                        message.isAudio = true
+                        message.body = ''
+
+                        //  fs.writeFile('teste.mp3', buffer, async (err) => {
+                        //     if (err)
+                        //         console.log(err);
+                        //     else {
+                        //         var audio64 =  await fs.readFileSync('./teste.mp3', 'base64');
+                        //         console.log(audio64)
+                        //         message.audioBase64 = audio64
+                        //         message.isAudio = true
+                        //         message.body = ''
+                        //         console.log('oi 2')
+                        //         resolve()
+
+                        //     }
                             
-                        });
-                        var imageAsBase64 = await fs.readFileSync('./teste.jpg', 'base64');
-                            message.imageUrl = imageAsBase64
-                            message.isImage = true
+                        // });
                     }
     
-                    allmessages.push(message)
+                     allmessages.push(message)
                 }
-                
+                resolve()
+
+            });
+
+                console.log('enviou')
                 return res.json(allmessages)
             }); 
             url = '/'+token+'/chat/moremessages'
@@ -401,24 +475,40 @@ io.on("connection", function (socket_client) {
                 const conversation = await client.loadEarlierMessages(number);
         
                 let allmessages = []
-                
-                for(var i=0; i < conversation.length; i++){
-                    let chat = {}
-                    const conv = conversation[i]
-                    const message = {
-                        sender: conv.from,
-                        body: conv.content,
-                        time: new Date(conv.timestamp),
-                        timestamp: conv.timestamp,
-                        receivid: conv.fromMe,
-                        status: 1,
-                        recvId: conv.to,
-                        recvIsGroup: false,
-                        id: conv.rowId
+                await new Promise(async (resolve, reject) => {  
+                    for(var i=0; i < conversation.length; i++){
+                        let chat = {}
+                        const conv = conversation[i]
+                        const message = {
+                            sender: conv.from,
+                            body: conv.content,
+                            audioBase64: '',
+                            isAudio: false ,
+                            time: new Date(conv.timestamp),
+                            timestamp: conv.timestamp,
+                            receivid: conv.fromMe,
+                            status: 1,
+                            recvId: conv.to,
+                            recvIsGroup: false,
+                            id: conv.rowId
+                        }
+
+                        if (conv.type == venom.MessageType.VOICE) {
+                            const buffer = await  client.decryptFile(conv);
+                            const audio64 =  buffer.toString('base64');
+    
+                            message.audioBase64 = audio64
+                            message.isAudio = true
+                            message.body = ''
+                            
+                        }
+                        allmessages.push(message)
                     }
-            
-                    allmessages.push(message)
-                }
+                    
+                    
+                    resolve()
+            }); 
+                
                 
                 return res.json(allmessages)
             }); 
