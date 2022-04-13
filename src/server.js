@@ -13,8 +13,9 @@ const credentials = {
 };
 
   
-const app = require('./app');
+// const app = require('./app');
 const https = require('https');
+const app = require('express')();
 const server = https.createServer(credentials, app);
 const venom = require('venom-bot');
 const port = 3331;
