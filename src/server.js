@@ -10,7 +10,6 @@ import ConversationStage from './app/models/ConversationStage'
 const privateKey = fs.readFileSync(`/etc/ssl/certs/server.key`);
 const certificate = fs.readFileSync(`/etc/ssl/certs/STAR_webdec_com_br.crt`);
 
-  
 const app = require('./app');
 const https = require('https');
 const server = https.createServer({
@@ -65,9 +64,6 @@ io.on("connection", function (socket_client) {
                 // console.log(base64Qrimg)
                 console.log(asciiQR)
                 console.log('====DISCONECTED ======')
-                console.log(client_id)
-                console.log('====DISCONECTED ======')
-
                 socket_client.to(client_id).emit("wpp_disconnected")
     
                 var matches = base64Qrimg.match(/^data:([A-Za-z-+\\/]+);base64,(.+)$/),
@@ -296,7 +292,11 @@ io.on("connection", function (socket_client) {
                             recvIsGroup: false,
                             id:  a.to,
                             isImage: false,
-                            imageUrl: ''
+                            imageUrl: '',
+                            isDocument: false,
+                            filename: '',
+                            documentUrl: '',
+                            mimetype: ''
                         }
                         
                         
@@ -332,6 +332,23 @@ io.on("connection", function (socket_client) {
                             resolve()
                         }); 
 
+                        await new Promise(async (resolve, reject) => {  
+            
+                            if (a.type == venom.MessageType.DOCUMENT) {
+                                const buffer = await  client.decryptFile(a);
+                                const imagem64 =  buffer.toString('base64');
+                                console.log(imagem64)
+                                message.documentUrl = imagem64
+                                message.isDocument = true
+                                message.filename = a.filename
+                                message.mimetype = a.mimetype
+                                // message.body = ''
+                                
+                            }
+                            
+                            resolve()
+                        }); 
+       
                         // if (a.type == venom.MessageType.IMAGE) {
                         //     const buffer = await client.decryptFile(a);
                         //     await fs.writeFile('teste.jpg', buffer, (err) => {
@@ -435,9 +452,13 @@ io.on("connection", function (socket_client) {
                         recvIsGroup: false,
                         id: conv.rowId,
                         isImage: false,
-                        imageUrl: ''
+                        imageUrl: '',
+                        isDocument: false,
+                        filename: '',
+                        documentUrl: '',
+                        mimetype: '',
                     }
-                        
+                    // console.log(conv.type)
                     if (conv.type == venom.MessageType.IMAGE) {
                         const buffer = await  client.decryptFile(conv);
                         const imagem64 =  buffer.toString('base64');
@@ -472,7 +493,20 @@ io.on("connection", function (socket_client) {
                             
                         // });
                     }
-    
+
+                    // console.log(conv)
+                    if (conv.type == venom.MessageType.DOCUMENT) {
+                        const buffer = await  client.decryptFile(conv);
+                        const imagem64 =  buffer.toString('base64');
+
+                        message.documentUrl = imagem64
+                        message.isDocument = true
+                        message.filename = conv.filename
+                        message.mimetype = conv.mimetype
+                        message.body = ''
+                        
+                    }
+
                      allmessages.push(message)
                 }
                 resolve()
